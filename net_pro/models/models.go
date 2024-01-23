@@ -2,26 +2,42 @@ package models
 
 import (
 	"fmt"
-
-	"bd/bd.go"
+	"http/bd"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-func db_connect() {
+var Db *gorm.DB
+
+func Db_connect() {
 	dsn := "host=localhost user=hugh password=SuperSecretPassword dbname=db port=5433 sslmode=disable"
-	Db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	DbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	Db = DbConn
 	if err == nil {
-		fmt.Printf("%T", Db)
+		fmt.Printf("logs: %T\n", Db)
 	}
+
+	db_migrate(Db)
 }
 
 func db_migrate(db *gorm.DB) {
-
 	migrator := db.Migrator()
-	if !migrator.HasTable("vehicles") {
-		migrator.CreateTable(&bd.Vehicle{})
 
+	if !(migrator.HasTable("vehicles")) {
+		migrator.CreateTable(&bd.Vehicle{})
+		fmt.Println("logs: create table vehicle")
 	}
+}
+
+func Add_vehicle(mark string, model string, number string, distance uint64, year uint16) {
+	Db.Create(&bd.Vehicle{Mark: mark, Model: model, Number: number, Distance: distance, Year: year})
+	fmt.Println("logs: POST handler has been finished")
+}
+
+func Get_vehicle(id string) *bd.Vehicle {
+	var vehicle bd.Vehicle
+	Db.First(&vehicle, "id = ?", id)
+	return &vehicle
+	// return resp obj
 }

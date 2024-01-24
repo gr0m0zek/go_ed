@@ -9,18 +9,38 @@ import (
 )
 
 func Getting(c *gin.Context) {
-	id := c.Query("id")
+	if c.Query("type") == "one" {
 
-	if id != "" {
-		c.JSON(http.StatusOK, models.Get_vehicle(id))
+		id := c.Query("id")
+
+		if id != "" {
+			vehicle, err := models.Get_vehicle(id)
+
+			if err != nil {
+				c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+				return
+			}
+
+			c.JSON(http.StatusOK, vehicle)
+		}
+	}
+
+	if c.Query("type") == "all" {
+		c.JSON(http.StatusOK, models.Get_all_vehicle())
 	}
 }
 
 func Postting(c *gin.Context) {
-	if dist, err1 := strconv.Atoi(c.Query("distance")); err1 == nil {
+	var dist uint64
+	var year uint16
 
-		if year, err2 := strconv.Atoi(c.Query("year")); err2 == nil {
-			models.Add_vehicle(c.Query("mark"), c.Query("model"), c.Query("number"), uint64(dist), uint16(year))
-		}
+	if distance, err1 := strconv.Atoi(c.Query("distance")); err1 == nil {
+		dist = uint64(distance)
 	}
+
+	if y, err2 := strconv.Atoi(c.Query("year")); err2 == nil {
+		year = uint16(y)
+	}
+
+	models.Add_vehicle(c.Query("mark"), c.Query("model"), c.Query("number"), dist, year)
 }

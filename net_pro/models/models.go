@@ -1,7 +1,6 @@
 package models
 
 import (
-	"fmt"
 	"http/bd"
 
 	"gorm.io/driver/postgres"
@@ -15,7 +14,7 @@ func Db_connect() {
 	DbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	Db = DbConn
 	if err == nil {
-		fmt.Printf("logs: %T\n", Db)
+		// fmt.Printf("logs: %T\n", Db)
 	}
 
 	db_migrate(Db)
@@ -26,18 +25,27 @@ func db_migrate(db *gorm.DB) {
 
 	if !(migrator.HasTable("vehicles")) {
 		migrator.CreateTable(&bd.Vehicle{})
-		fmt.Println("logs: create table vehicle")
+		// fmt.Println("logs: create table vehicle")
 	}
 }
 
 func Add_vehicle(mark string, model string, number string, distance uint64, year uint16) {
 	Db.Create(&bd.Vehicle{Mark: mark, Model: model, Number: number, Distance: distance, Year: year})
-	fmt.Println("logs: POST handler has been finished")
+	// fmt.Println("logs: POST handler has been finished")
 }
 
-func Get_vehicle(id string) *bd.Vehicle {
+func Get_vehicle(id string) (bd.Vehicle, error) {
 	var vehicle bd.Vehicle
-	Db.First(&vehicle, "id = ?", id)
-	return &vehicle
-	// return resp obj
+	res := Db.First(&vehicle, "id = ?", id)
+	err := res.Error
+	if err != nil {
+		return bd.Vehicle{}, err
+	}
+	return vehicle, err
+}
+
+func Get_all_vehicle() []bd.Vehicle {
+	var vehicles []bd.Vehicle
+	Db.Limit(-1).Find(&vehicles)
+	return vehicles
 }

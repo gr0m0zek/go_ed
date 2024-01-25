@@ -1,0 +1,43 @@
+# Use postgres/example user/password credentials
+version: '3.1'
+
+services:
+
+  db:
+    container_name: db_container
+    image: postgres
+    restart: always
+
+    environment:
+      POSTGRES_USER: hugh
+      POSTGRES_PASSWORD: SuperSecretPassword
+      POSTGRES_DB: db
+
+    ports: 
+      - 127.0.0.1:5433:5432
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d db -U hugh"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 127.0.0.1:8080:8080
+
+  back:
+    container_name: back_container
+    build: .
+
+    depends_on:
+      db:
+        condition: service_healthy
+
+    environment:
+      - DB_HOST=db_container
+      
+    ports:
+      - 3000:3000

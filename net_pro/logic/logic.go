@@ -9,6 +9,6 @@ import (
 func Run_back() {
 	router := gin.Default()
 	router.GET("/", handlers.Getting)
-	router.POST("/", handlers.Postting)
+	router.POST("/", handlers.Posting)
 	router.Run(":3000")
 }

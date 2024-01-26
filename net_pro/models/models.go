@@ -16,7 +16,6 @@ func Db_connect() {
 	DbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	Db = DbConn
 	if err == nil {
-		// fmt.Printf("logs: %T\n", Db)
 	}
 
 	db_migrate(Db)
@@ -27,13 +26,11 @@ func db_migrate(db *gorm.DB) {
 
 	if !(migrator.HasTable("vehicles")) {
 		migrator.CreateTable(&bd.Vehicle{})
-		// fmt.Println("logs: create table vehicle")
 	}
 }
 
-func Add_vehicle(mark string, model string, number string, distance uint64, year uint16) {
-	Db.Create(&bd.Vehicle{Mark: mark, Model: model, Number: number, Distance: distance, Year: year})
-	// fmt.Println("logs: POST handler has been finished")
+func Add_vehicle(v bd.Vehicle) {
+	Db.Create(&v)
 }
 
 func Get_vehicle(id string) (bd.Vehicle, error) {

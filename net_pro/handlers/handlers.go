@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"http/models"
+	"http/bd"
 	"net/http"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -30,17 +30,14 @@ func Getting(c *gin.Context) {
 	}
 }
 
-func Postting(c *gin.Context) {
-	var dist uint64
-	var year uint16
+func Posting(c *gin.Context) {
+	var vehicle bd.Vehicle
 
-	if distance, err1 := strconv.Atoi(c.Query("distance")); err1 == nil {
-		dist = uint64(distance)
+	if err := c.ShouldBind(&vehicle); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
 	}
 
-	if y, err2 := strconv.Atoi(c.Query("year")); err2 == nil {
-		year = uint16(y)
-	}
-
-	models.Add_vehicle(c.Query("mark"), c.Query("model"), c.Query("number"), dist, year)
+	models.Add_vehicle(vehicle)
+	c.JSON(http.StatusOK, gin.H{"message": "Vehicle created successfully", "vehicle" : vehicle})
 }

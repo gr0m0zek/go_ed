@@ -7,5 +7,4 @@ type Vehicle struct {
 	Number   string `gorm:"type varchar(25)"`
 	Distance uint64
 	Year     uint16 //add check to production year. Exactly datatypes.Date ...
-
 }

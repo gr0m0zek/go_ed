@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"http/bd"
 	"os"
-
+	"log"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -14,9 +14,10 @@ var Db *gorm.DB
 func Db_connect() {
 	dsn := fmt.Sprintf("host=%s user=hugh password=SuperSecretPassword dbname=db port=5432 sslmode=disable", os.Getenv("DB_HOST"))
 	DbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
-	Db = DbConn
-	if err == nil {
+	if err != nil {
+		log.Fatal(err)
 	}
+	Db = DbConn
 
 	db_migrate(Db)
 }

@@ -1,12 +1,18 @@
 package handlers
 
 import (
-	"http/models"
 	"http/bd"
+	"http/models"
+	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+type UserRequest struct {
+	Action  string     `json:"action"`
+	Vehicle bd.Vehicle `json:"body"`
+}
 
 func Getting(c *gin.Context) {
 	if c.Query("type") == "one" {
@@ -31,13 +37,30 @@ func Getting(c *gin.Context) {
 }
 
 func Posting(c *gin.Context) {
-	var vehicle bd.Vehicle
 
-	if err := c.ShouldBind(&vehicle); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var req UserRequest
+	err := c.ShouldBind(&req)
+
+	if err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
 		return
 	}
 
-	models.Add_vehicle(vehicle)
-	c.JSON(http.StatusOK, gin.H{"message": "Vehicle created successfully", "vehicle" : vehicle})
+	var vehicle bd.Vehicle = req.Vehicle
+
+	switch req.Action {
+	case "add":
+		models.Add_vehicle(vehicle)
+		c.JSON(200, gin.H{"message": "Vehicle created successfully", "vehicle": vehicle})
+
+	case "update":
+		err := models.UpdateVehicle(vehicle)
+		if err != nil {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(200, gin.H{"message": "Vehicle updated successfully", "vehicle": vehicle})
+	}
+
+	log.Print(req, vehicle)
 }

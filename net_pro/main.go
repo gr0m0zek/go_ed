@@ -1,8 +1,8 @@
 package main
 
 import (
-	"http/logic"
-	"http/models"
+	"net_pro/logic"
+	"net_pro/models"
 )
 
 func main() {

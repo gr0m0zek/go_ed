@@ -1,75 +1,61 @@
 package models
 
 import (
-	"fmt"
-	"http/bd"
-	"log"
-	"os"
+	"context"
 
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
+	"github.com/gin-gonic/gin"
+
+	"log"
+	"net_pro/bd"
+
+	"database/sql"
+
+	"github.com/uptrace/bun"
+	"github.com/uptrace/bun/dialect/pgdialect"
+	"github.com/uptrace/bun/driver/pgdriver"
 )
 
-var Db *gorm.DB
+var db *bun.DB
 
 func Db_connect() {
+	ctx := context.Background()
 
-	dsn := fmt.Sprintf("host=%s user=hugh password=SuperSecretPassword dbname=db port=5432 sslmode=disable", os.Getenv("DB_HOST"))
-	DbConn, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	dsn := "postgresql://hugh:SuperSecretPassword@localhost:5433/db?sslmode=disable"
+	sqldb := sql.OpenDB(pgdriver.NewConnector(pgdriver.WithDSN(dsn)))
+	db = bun.NewDB(sqldb, pgdialect.New())
 
-	if err != nil {
-		log.Fatal(err)
+	if _, err := db.NewCreateTable().Model((*bd.Vehicle)(nil)).IfNotExists().Exec(ctx); err != nil {
+		log.Println(err)
 	}
-	Db = DbConn
 
-	db_migrate(Db)
-}
-
-func db_migrate(db *gorm.DB) {
-	migrator := db.Migrator()
-
-	if !(migrator.HasTable("vehicles")) {
-		migrator.CreateTable(&bd.Vehicle{})
+	if err := db.Ping(); err != nil {
+		log.Println(err)
+		return
 	}
 }
 
-func Add_vehicle(v bd.Vehicle) {
-	Db.Create(&v)
+func Get_vehicle(id string, context *gin.Context) (bd.Vehicle, error) {
+
+	vehicle := new(bd.Vehicle)
+	err := db.NewSelect().Model(vehicle).Where("id = ?", id).Scan(context)
+
+	return *vehicle, err
 }
 
-func Get_vehicle(id string) (bd.Vehicle, error) {
+func Get_all_vehicle(context *gin.Context) ([]bd.Vehicle, error) {
 
-	var vehicle bd.Vehicle
-	res := Db.First(&vehicle, "id = ?", id)
-	err := res.Error
+	vehicles := new([]bd.Vehicle)
+	err := db.NewSelect().Model(vehicles).Scan(context)
 
-	if err != nil {
-		return bd.Vehicle{}, err
-	}
-
-	return vehicle, err
+	return *vehicles, err
 }
 
-func Get_all_vehicle() []bd.Vehicle {
-
-	var vehicles []bd.Vehicle
-	Db.Limit(-1).Find(&vehicles)
-
-	return vehicles
+func Add_vehicle(vehicle *bd.Vehicle, context *gin.Context) error {
+	_, err := db.NewInsert().Model(vehicle).Exec(context)
+	return err
 }
 
-func UpdateVehicle(vehicle bd.Vehicle) error {
-
-	var selectVehicle bd.Vehicle
-	err := Db.First(&selectVehicle, vehicle.ID).Error
-
-	if err == nil {
-		selectVehicle = vehicle
-		err2 := Db.Save(&selectVehicle).Error
-
-		if err2 != nil {
-			return err2
-		}
-	}
+func UpdateVehicle(vehicle *bd.Vehicle, context *gin.Context) error {
+	_, err := db.NewUpdate().Model(vehicle).WherePK().Exec(context)
 	return err
 }

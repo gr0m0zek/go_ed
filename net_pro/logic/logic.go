@@ -1,7 +1,7 @@
 package logic
 
 import (
-	"http/handlers"
+	"net_pro/handlers"
 
 	"github.com/gin-gonic/gin"
 )
